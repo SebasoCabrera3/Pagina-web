@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>{% block title %}Mi Proyecto{% endblock %} | Gestión de Proyectos</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/favicon.ico') }}">
+  <!-- fuentes, CSS, etc. -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  {% block head %}{% endblock %}
+</head>
+<body class="theme-dark">
+  <a href="#main-content" class="skip-link">Saltar al contenido</a>
+
+  <div class="site-wrapper">
+    <!-- HEADER -->
+    <header class="jira-style-header" role="banner">
+      <div class="header-left">
+        <a href="{{ current_user.is_authenticated and url_for('dashboard') or url_for('index') }}" class="logo-link">
+          <img src="{{ url_for('static', filename='images/Logo.png') }}" alt="JS Proyectos" class="header-logo">
+        </a>
+      </div>
+      <nav class="header-center-nav">
+        {% if current_user.is_authenticated %}
+          <ul class="nav-list">
+            <li><a href="{{ url_for('dashboard') }}">Dashboard</a></li>
+            {% if current_user.role == 'supervisor' %}
+              <li><a href="{{ url_for('crear_proyecto') }}">Crear Proyecto</a></li>
+            {% endif %}
+          </ul>
+        {% endif %}
+      </nav>
+      <nav class="header-right">
+        <ul class="nav-list">
+          {% if current_user.is_authenticated %}
+            <li class="welcome-message">Hola, {{ current_user.username.replace('_',' ').title() }}</li>
+            <li><a href="{{ url_for('logout') }}" class="button btn-secondary">Cerrar Sesión</a></li>
+          {% else %}
+            <li><a href="{{ url_for('roles') }}">Iniciar Sesión</a></li>
+            <li><a href="{{ url_for('register_apoyo') }}">Registrarse</a></li>
+          {% endif %}
+        </ul>
+      </nav>
+    </header>
+
+    <div class="container app-container">
+      {# <-- ¡Aquí ya NO incluimos nada de sidebar! #}
+      <main id="main-content" class="content-area" role="main">
+
+
+
+        {% block content %}
+        <!-- Contenido por defecto -->
+        {% endblock %}
+      </main>
+    </div>
+  </div>
+
+  {% block scripts %}
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.alert').forEach(alert => {
+        setTimeout(() => {
+          alert.style.opacity = '0';
+          alert.addEventListener('transitionend', () => alert.remove(), { once: true });
+        }, 3500);
+        alert.querySelector('.close-alert-btn')
+             .addEventListener('click', () => alert.remove());
+      });
+    });
+  </script>
+  {% endblock %}
+</body>
+</html>

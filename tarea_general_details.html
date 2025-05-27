@@ -1,0 +1,93 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalles de Tarea General: {{ tarea_general.title }}{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <h2 class="page-title">Detalles de la Tarea General</h2>
+
+    <div class="card">
+        <div class="card-body">
+            <table class="project-info-table">
+                <tbody>
+                    <tr>
+                        <th>Título:</th>
+                        <td>{{ tarea_general.title }}</td>
+                    </tr>
+                    <tr>
+                        <th>Descripción:</th>
+                        <td>{{ tarea_general.description or 'Sin descripción' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Proyecto Asociado:</th>
+                        <td>
+                            {% if tarea_general.project %}
+                                <a href="{{ url_for('ver_proyecto', project_id=tarea_general.project.id) }}" class="task-project-link">
+                                    {{ tarea_general.project.name }}
+                                </a>
+                            {% else %}
+                                Sin proyecto
+                            {% endif %}
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Área asignada:</th>
+                        <td>{{ tarea_general.area.name if tarea_general.area else 'Sin asignar' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Prioridad:</th>
+                        <td>
+                            <span class="status-badge prioridad-{{ tarea_general.prioridad | lower }}">{{ tarea_general.prioridad }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Fecha Límite:</th>
+                        <td>{{ tarea_general.fecha_limite.strftime('%Y-%m-%d') if tarea_general.fecha_limite else 'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>Estado:</th>
+                        <td>
+                            <span class="status-badge status-{{ tarea_general.status | lower | replace(' ', '-') }}">{{ tarea_general.status }}</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Avance General:</th>
+                        <td>
+                            <div class="progress-bar-container">
+                                <div class="progress-bar" style="width: {{ tarea_general.porcentaje_avance | int }}%;"></div>
+                                <span class="progress-text">{{ tarea_general.porcentaje_avance | int }}%</span>
+                            </div>
+                        </td>
+                    </tr>
+                    <tr>
+                        <th>Creada por:</th>
+                        <td>{{ tarea_general.creator.username.replace('_',' ').title() if tarea_general.creator else 'N/A' }}</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card-footer actions-footer">
+            <div class="button-group">
+                <a href="{{ url_for('editar_tarea_general', tarea_general_id=tarea_general.id) }}" class="button btn-primary">Editar</a>
+                <form action="{{ url_for('eliminar_tarea_general', tarea_general_id=tarea_general.id) }}" method="POST" onsubmit="return confirm('¿Estás seguro de eliminar esta tarea general?');">
+                    <button type="submit" class="button btn-danger">Eliminar</button>
+                </form>
+                {% if tarea_general.project %}
+                    <a href="{{ url_for('ver_proyecto', project_id=tarea_general.project.id) }}" class="button btn-secondary">
+                        ← Volver al Proyecto
+                    </a>
+                {% else %}
+                    <a href="{{ url_for('dashboard') }}" class="button btn-secondary">
+                        ← Volver al Dashboard
+                    </a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{{ super() }}
+{% endblock %}

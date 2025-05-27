@@ -1,0 +1,92 @@
+{% extends "base.html" %} {# Asegúrate de que tu base.html existe y es correcta #}
+
+{% block title %}Editar Tarea: {{ task.title }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Editar Tarea: {{ task.title }}</h1>
+
+    {# Mensajes flash para notificaciones de éxito o error #}
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            {% for category, message in messages %}
+                <div class="alert alert-{{ category }} mt-3" role="alert">{{ message }}</div>
+            {% endfor %}
+        {% endif %}
+    {% endwith %}
+
+    <form method="POST" action="{{ url_for('edit_task', task_id=task.id) }}">
+        {# Esto es esencial para la seguridad CSRF si estás usando Flask-WTF #}
+        {{ form.csrf_token }}
+
+        <div class="form-group mb-3">
+            {{ form.title.label(class="form-label") }}
+            {{ form.title(class="form-control") }}
+            {% if form.title.errors %}
+                <ul class="text-danger">
+                    {% for error in form.title.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="form-group mb-3">
+            {{ form.description.label(class="form-label") }}
+            {{ form.description(class="form-control", rows="5") }}
+            {% if form.description.errors %}
+                <ul class="text-danger">
+                    {% for error in form.description.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="form-group mb-3">
+            {{ form.due_date.label(class="form-label") }}
+            {{ form.due_date(class="form-control") }}
+            {% if form.due_date.errors %}
+                <ul class="text-danger">
+                    {% for error in form.due_date.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="form-group mb-3">
+            {{ form.status.label(class="form-label") }}
+            {{ form.status(class="form-control") }}
+            {% if form.status.errors %}
+                <ul class="text-danger">
+                    {% for error in form.status.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        {# Campo para asignar usuario a la tarea #}
+        <div class="form-group mb-3">
+            {{ form.assigned_user.label(class="form-label") }}
+            {{ form.assigned_user(class="form-control") }}
+            {% if form.assigned_user.errors %}
+                <ul class="text-danger">
+                    {% for error in form.assigned_user.errors %}
+                        <li>{{ error }}</li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+
+        <div class="button-group mt-4">
+            {# Botón de "Guardar Tarea" - Aseguramos las clases que deberías tener en tu CSS #}
+            {{ form.submit(class="button btn-primary") }} 
+            {# Enlace para volver a los detalles del proyecto si se cancela la edición - Usamos clase de botón secundario #}
+            <a href="{{ url_for('view_task', task_id=task.id) }}" class="button btn-secondary">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}
+

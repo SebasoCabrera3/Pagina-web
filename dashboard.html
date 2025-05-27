@@ -1,0 +1,211 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard{% endblock %}
+
+{% block sidebar %}
+<aside class="sidebar">
+  <h3 class="sidebar-title"><i class="fas fa-project-diagram"></i> Mis Proyectos</h3>
+  <ul class="sidebar-list">
+    {% for project in proyectos %}
+      <li>
+        <a href="{{ url_for('ver_proyecto', project_id=project.id) }}" class="sidebar-link">{{ project.nombre }}</a>
+        {% if project.tareas_generales %}
+          <ul class="sidebar-sub-list">
+            {% for tg in project.tareas_generales %}
+              <li>
+                <a href="{{ url_for('ver_tarea_general', tarea_general_id=tg.id) }}">{{ tg.nombre }}</a>
+                {% if tg.subtareas %}
+                  <ul>
+                    {% for st in tg.subtareas %}
+                      <li>
+                        <a href="{{ url_for('ver_tarea_general', tarea_general_id=tg.id) }}#subtarea-{{ st.id }}">
+                          {{ st.nombre }}
+                        </a>
+                      </li>
+                    {% endfor %}
+                  </ul>
+                {% endif %}
+              </li>
+            {% endfor %}
+          </ul>
+        {% endif %}
+      </li>
+    {% endfor %}
+    {% if current_user.role == 'supervisor' %}
+      <li><a href="{{ url_for('crear_proyecto') }}" class="sidebar-button"><i class="fas fa-plus-circle"></i> Nuevo Proyecto</a></li>
+    {% endif %}
+  </ul>
+</aside>
+{% endblock %}
+
+
+{% block content %}
+<section class="dashboard-main-content">
+  <h1 class="page-title">Dashboard de {{ current_user.role|capitalize }}</h1>
+  <p class="greeting-text">
+    Bienvenido, {{ current_user.username.replace('_',' ').title() }}.
+  </p>
+
+  {# --- Resumen lateral ahora en tarjetas sobre el main, permanece aquí por si cambias CSS --- #}
+  <div class="dashboard-summary-cards">
+    <div class="summary-card total-projects">
+      <div class="icon"><i class="fas fa-folder-open"></i></div>
+      <div class="details">
+        <span class="number">{{ total_proyectos_activos }}</span>
+        <span class="label">Proyectos Activos</span>
+      </div>
+    </div>
+    <div class="summary-card total-tasks">
+      <div class="icon"><i class="fas fa-clipboard-list"></i></div>
+      <div class="details">
+        <span class="number">{{ total_tareas_pendientes }}</span>
+        <span class="label">Tareas Generales Pendientes</span>
+      </div>
+    </div>
+    <div class="summary-card delayed-tasks">
+      <div class="icon"><i class="fas fa-exclamation-triangle"></i></div>
+      <div class="details">
+        <span class="number">{{ subtareas_retrasadas|length }}</span>
+        <span class="label">Subtareas Retrasadas</span>
+      </div>
+    </div>
+  </div>
+
+  {# --- Subtareas Retrasadas --- #}
+  <div class="card neon-border mt-3">
+    <h2 class="card-title">
+      <i class="fas fa-hourglass-half"></i> Mis Subtareas Retrasadas
+    </h2>
+    {% if subtareas_retrasadas %}
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Subtarea</th>
+              <th>Proyecto</th>
+              <th>Fecha Límite</th>
+              <th>Estado</th>
+              <th>Asignado a</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for sub in subtareas_retrasadas %}
+              <tr>
+                <td data-label="Subtarea">{{ sub.nombre }}</td>
+                <td data-label="Proyecto">{{ sub.proyecto_nombre or 'N/A' }}</td>
+                <td data-label="Fecha Límite">
+                  {{ sub.fecha_limite.strftime('%Y-%m-%d') if sub.fecha_limite else 'N/A' }}
+                </td>
+                <td data-label="Estado">
+                  <span class="status-badge status-{{ sub.status|lower|replace(' ', '-') }}">
+                    {{ sub.status }}
+                  </span>
+                </td>
+                <td data-label="Asignado a">{{ sub.asignado_a_nombre or 'N/A' }}</td>
+                <td data-label="Acciones">
+                  <a href="{{ url_for('editar_subtarea', subtarea_id=sub.id) }}"
+                     class="button btn-details">Ver/Editar</a>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="empty-state-message">
+        ¡Excelente! No tienes subtareas retrasadas.
+      </p>
+    {% endif %}
+  </div>
+
+  {# --- Visión General de Proyectos --- #}
+  <div class="card neon-border mt-3">
+    <h2 class="card-title">Visión General de Proyectos</h2>
+    {% if main_projects %}
+      <div class="table-wrapper">
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>PROYECTO</th>
+              <th>TAREAS GENERALES</th>
+              <th>ESTADO PROYECTO</th>
+              <th>FECHA FIN PROYECTO</th>
+              <th>ACCIONES</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for project in main_projects %}
+              <tr>
+                <td data-label="Proyecto">
+                  <a href="{{ url_for('ver_proyecto', project_id=project.id) }}">
+                    {{ project.name }}
+                  </a>
+                </td>
+                <td data-label="Tareas Generales">
+                  {% if project.tareas_generales %}
+                    {{ project.tareas_generales|length }} Tareas
+                    <a href="{{ url_for('ver_proyecto', project_id=project.id) }}"
+                       class="small-link">(Ver)</a>
+                  {% else %}
+                    0 Tareas
+                  {% endif %}
+                </td>
+                <td data-label="Estado Proyecto">
+                  <span class="status-badge status-{{ project.status|lower|replace(' ', '-') }}">
+                    {{ project.status }}
+                  </span>
+                </td>
+                <td data-label="Fecha Fin Proyecto">
+                  {{ project.end_date.strftime('%Y-%m-%d') if project.end_date else 'N/A' }}
+                </td>
+                <td data-label="Acciones">
+                  <a href="{{ url_for('editar_proyecto', project_id=project.id) }}"
+                     class="button btn-details">Editar</a>
+                  <form action="{{ url_for('eliminar_proyecto', project_id=project.id) }}"
+                        method="POST" style="display:inline;">
+                    <button type="submit" class="button btn-delete"
+                            onclick="return confirm('¿Estás seguro de eliminar este proyecto?');">
+                      Eliminar
+                    </button>
+                  </form>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <p class="empty-state-message">No hay proyectos para mostrar.</p>
+    {% endif %}
+  </div>
+
+  {% if current_user.role == 'supervisor' %}
+    <div class="create-project-section">
+      <a href="{{ url_for('crear_proyecto') }}"
+         class="button btn-primary">
+        <i class="fas fa-plus-circle"></i> Crear Nuevo Proyecto
+      </a>
+    </div>
+  {% endif %}
+
+</section>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.collapse').forEach(collapseEl => {
+        collapseEl.addEventListener('show.bs.collapse', () => {
+          const toggler = document.querySelector(`[data-bs-target="#${collapseEl.id}"] i`);
+          if (toggler) toggler.classList.replace('fa-chevron-down','fa-chevron-up');
+        });
+        collapseEl.addEventListener('hide.bs.collapse', () => {
+          const toggler = document.querySelector(`[data-bs-target="#${collapseEl.id}"] i`);
+          if (toggler) toggler.classList.replace('fa-chevron-up','fa-chevron-down');
+        });
+      });
+    });
+  </script>
+{% endblock %}

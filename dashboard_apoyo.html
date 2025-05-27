@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title %}Mi Dashboard – Apoyo{% endblock %}
+
+{% block content %}
+  <h1>Mis Proyectos</h1>
+
+  {% if proyectos %}
+    {% for proyecto in proyectos %}
+      <section class="project-card">
+        <h2>{{ proyecto.name }}</h2>
+        <p><strong>Vence:</strong> {{ proyecto.end_date.strftime('%d/%m/%Y') }}</p>
+
+        {# Filtramos las TG de este proyecto #}
+        {% set tgs = tareas_generales | selectattr('project_id', 'equalto', proyecto.id) | list %}
+        {% if tgs %}
+          <ul class="tg-list">
+            {% for tg in tgs %}
+              <li class="tg-item">
+                <h3>{{ tg.title }}</h3>
+                <p><small>Vence TG: {{ tg.fecha_limite.strftime('%d/%m/%Y') }}</small></p>
+                {# Subtareas dentro de esta TG asignadas al apoyo #}
+                <ul class="subtarea-list">
+                  {% for s in subtareas if s.tarea_general_id == tg.id %}
+                    <li class="subtarea-item {% if s in subtareas_retrasadas %}retrasada{% endif %}">
+                      {{ s.title }} — vence {{ s.fecha_limite.strftime('%d/%m/%Y') }}
+                    </li>
+                  {% endfor %}
+                </ul>
+              </li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p>No tienes tareas generales en este proyecto.</p>
+        {% endif %}
+      </section>
+    {% endfor %}
+  {% else %}
+    <p>No tienes proyectos asignados.</p>
+  {% endif %}
+{% endblock %}

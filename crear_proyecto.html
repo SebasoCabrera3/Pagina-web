@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+
+{% block title %}Crear Proyecto{% endblock %}
+
+{% block head %}
+  {{ super() }}
+  <!-- Estilos personalizados para el formulario -->
+  <style>
+    .form-container {
+      max-width: 700px;
+      margin: var(--space-xxl) auto;
+      background: var(--color-card-bg);
+      padding: var(--space-xl);
+      border-radius: var(--border-radius-medium);
+      box-shadow: var(--shadow-deep);
+    }
+    .form-title {
+      margin-bottom: var(--space-lg);
+      color: var(--color-text-highlight);
+      text-align: center;
+      font-size: 1.75rem;
+      text-shadow: 0 0 6px var(--color-accent-blue-vibrant);
+    }
+    .form-group {
+      margin-bottom: var(--space-lg);
+      display: flex;
+      flex-direction: column;
+    }
+    .form-label {
+      margin-bottom: var(--space-sm);
+      font-weight: 600;
+      color: var(--color-text-muted);
+    }
+    .form-row {
+      display: flex;
+      gap: var(--space-md);
+    }
+    .form-actions {
+      display: flex;
+      gap: var(--space-md);
+      justify-content: flex-start;
+      align-items: center;
+      margin-top: var(--space-lg);
+    }
+  </style>
+{% endblock %}
+
+{% block content %}
+<div class="form-container">
+  <h2 class="form-title">Crear Nuevo Proyecto</h2>
+
+  {# Mensajes flash #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, msg in messages %}
+          <div class="alert alert-{{ category }}">{{ msg }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  {# Errores de validación #}
+  {% if form.errors %}
+    <div class="flash-messages">
+      <div class="alert alert-danger">
+        <ul>
+          {% for field, errs in form.errors.items() %}
+            {% for err in errs %}
+              <li><strong>{{ form[field].label.text }}:</strong> {{ err }}</li>
+            {% endfor %}
+          {% endfor %}
+        </ul>
+      </div>
+    </div>
+  {% endif %}
+
+  <form method="POST" novalidate>
+    {{ form.hidden_tag() }}
+
+    <div class="form-group">
+      {{ form.name.label(class="form-label") }}
+      {{ form.name(class="form-control", placeholder="Ej. Rehabilitación Vial") }}
+    </div>
+
+    <div class="form-group">
+      {{ form.description.label(class="form-label") }}
+      {{ form.description(class="form-control", rows="4", placeholder="Descripción del proyecto") }}
+    </div>
+
+    <div class="form-row">
+      <div style="flex:1;">
+        <div class="form-group">
+          {{ form.start_date.label(class="form-label") }}
+          {{ form.start_date(class="form-control", type="date") }}
+        </div>
+      </div>
+      <div style="flex:1;">
+        <div class="form-group">
+          {{ form.end_date.label(class="form-label") }}
+          {{ form.end_date(class="form-control", type="date") }}
+        </div>
+      </div>
+    </div>
+
+    <div class="form-group">
+      {{ form.status.label(class="form-label") }}
+      {{ form.status(class="form-control") }}
+    </div>
+
+    <div class="form-actions">
+      {{ form.submit(class="button") }}
+      <a href="{{ url_for('dashboard') }}" class="button btn-secondary">← Volver</a>
+    </div>
+  </form>
+</div>
+{% endblock %}

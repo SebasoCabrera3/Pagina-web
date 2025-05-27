@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bienvenidos – Gestor de Proyectos</title>
+
+  <!-- Fuentes & CSS Galáctico -->
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+  <style>
+    /* ==== Fullscreen Galactic Background from style.css ==== */
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Splash overlay */
+    #splash {
+      position: absolute;
+      inset: 0;
+      background: var(--color-bg-nebula-gradient),
+                  url('{{ url_for('static', filename='images/stardust.png') }}') repeat,
+                  url('{{ url_for('static', filename='images/deep-space-overlay.jpg') }}') no-repeat center center;
+      background-size: 200% 200%, auto, cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--color-text-highlight);
+      font-size: 4rem;
+      text-shadow: 0 0 20px var(--color-accent-blue-vibrant);
+      animation: nebula-movement 120s linear infinite alternate;
+      transition: opacity 1s ease;
+      z-index: 1000;
+    }
+    #splash.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* Landing content */
+    #landing {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      opacity: 0;
+      transition: opacity 1s ease 0.5s;
+      z-index: 500;
+    }
+    #landing.visible {
+      opacity: 1;
+    }
+
+    .landing-title {
+      font-size: 3rem;
+      margin-bottom: var(--space-md);
+      color: var(--color-text-highlight);
+      text-shadow: 0 0 20px var(--color-accent-blue-vibrant);
+    }
+    .landing-subtitle {
+      font-size: 1.25rem;
+      margin-bottom: var(--space-lg);
+      color: var(--color-text-secondary);
+    }
+    .landing-button {
+      padding: var(--space-md) var(--space-xxl);
+      font-size: 1rem;
+      font-weight: 700;
+      background: var(--color-accent-green-energetic);
+      color: var(--color-bg-deep-space);
+      border-radius: var(--border-radius-large);
+      box-shadow: 0 0 24px rgba(0, 232, 120, 0.8);
+      text-decoration: none;
+      transition: transform var(--transition-duration-short) ease,
+                  box-shadow var(--transition-duration-medium) ease;
+      margin-top: var(--space-md);
+    }
+    .landing-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 0 36px rgba(0, 232, 120, 1);
+    }
+  </style>
+</head>
+<body>
+  <div id="splash">Bienvenidos</div>
+  <div id="landing">
+    <h1 class="landing-title">Gestor de Proyectos</h1>
+    <p class="landing-subtitle">¡Explora tus proyectos de manera rápida y efectiva!</p>
+    <a href="{{ url_for('roles') }}" class="landing-button">Gestionar</a>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      setTimeout(() => {
+        document.getElementById('splash').classList.add('hidden');
+        document.getElementById('landing').classList.add('visible');
+      }, 2000);
+    });
+  </script>
+</body>
+</html>

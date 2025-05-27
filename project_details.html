@@ -1,0 +1,203 @@
+{% extends 'base.html' %}
+
+{% block title %}Detalles del Proyecto: {{ project.name }}{% endblock %}
+
+{% block content %}
+  {# ————— Mensajes flash ————— #}
+  {% with messages = get_flashed_messages(with_categories=true) %}
+    {% if messages %}
+      <div class="flash-messages">
+        {% for category, message in messages %}
+          <div class="alert alert-{{ category }}">{{ message }}</div>
+        {% endfor %}
+      </div>
+    {% endif %}
+  {% endwith %}
+
+  <h1 class="page-title">{{ project.name }}</h1>
+  <p class="project-subtitle">Gestión detallada del proyecto</p>
+
+  <div class="main-content-grid">
+    <!-- Columna Izquierda -->
+    <div class="grid-column-left">
+
+      <!-- Card: Información General -->
+      <div class="card project-info-card neon-border">
+        <div class="card-header"><h3>Información General</h3></div>
+        <div class="card-body">
+          <div class="table-wrapper">
+            <table class="project-info-table">
+              <tbody>
+                <tr>
+                  <th>Descripción:</th>
+                  <td data-label="Descripción">{{ project.description or 'Sin descripción' }}</td>
+                </tr>
+                <tr>
+                  <th>Fecha de Inicio:</th>
+                  <td data-label="Fecha de Inicio">{{ project.start_date.strftime('%Y-%m-%d') if project.start_date else 'No especificada' }}</td>
+                </tr>
+                <tr>
+                  <th>Fecha Estimada de Fin:</th>
+                  <td data-label="Fecha Estimada de Fin">{{ project.end_date.strftime('%Y-%m-%d') if project.end_date else 'No especificada' }}</td>
+                </tr>
+                <tr>
+                  <th>Estado:</th>
+                  <td data-label="Estado">
+                    <span class="status-badge status-{{ project.status|lower|replace(' ', '-') }}{% if project.is_delayed %} status-retrasada-oro{% endif %}">
+                      {{ project.current_display_status }}
+                    </span>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Creado el:</th>
+                  <td data-label="Creado el">{{ project.date_created.strftime('%Y-%m-%d %H:%M') }}</td>
+                </tr>
+                <tr>
+                  <th>Creado por:</th>
+                  <td data-label="Creado por">
+                    {{ project.creator.username.replace('_',' ').title() if project.creator else 'N/A' }}
+                  </td>
+                </tr>
+
+                {# Cálculo de porcentajes #}
+                {% set total = tareas_generales|length %}
+                {% set avance_total = tareas_generales|map(attribute='porcentaje_avance')|sum %}
+                {% set global_avance = (avance_total / total)|round(0) if total else 0 %}
+                {% set completadas = tareas_generales|selectattr('status','equalto','Finalizado')|list|length %}
+                {% set pct_completadas = (completadas / total * 100)|round(0) if total else 0 %}
+
+                <tr>
+                  <th>Avance Global:</th>
+                  <td data-label="Avance Global">
+                    <div class="progress-bar-container">
+                      <div class="progress-bar" style="width: {{ global_avance }}%;">
+                        {% if global_avance > 15 %}
+                          <span class="progress-text-inner">{{ global_avance }}%</span>
+                        {% endif %}
+                      </div>
+                      {% if global_avance <= 15 %}
+                        <span class="progress-text">{{ global_avance }}%</span>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+                <tr>
+                  <th>Tareas Completadas:</th>
+                  <td data-label="Tareas Completadas">
+                    <div class="progress-bar-container">
+                      <div class="progress-bar green-bar" style="width: {{ pct_completadas }}%;">
+                        {% if pct_completadas > 15 %}
+                          <span class="progress-text-inner">{{ pct_completadas }}%</span>
+                        {% endif %}
+                      </div>
+                      {% if pct_completadas <= 15 %}
+                        <span class="progress-text">{{ pct_completadas }}% ({{ completadas }} de {{ total }})</span>
+                      {% else %}
+                        <span class="progress-text-outer">({{ completadas }} de {{ total }})</span>
+                      {% endif %}
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card-footer actions-footer">
+          <div class="button-group">
+            <a href="{{ url_for('editar_proyecto', project_id=project.id) }}" class="button btn-primary">Editar Proyecto</a>
+            <form action="{{ url_for('eliminar_proyecto', project_id=project.id) }}" method="POST" onsubmit="return confirm('¿Eliminar este proyecto?');">
+              <button type="submit" class="button btn-danger">Eliminar Proyecto</button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card: Tareas Generales -->
+      <div class="card project-tasks-card neon-border">
+        <div class="card-header"><h3>Tareas del Proyecto ({{ total }})</h3></div>
+        <div class="card-body">
+          {% if tareas_generales %}
+            <div class="table-wrapper">
+              <table class="data-table">
+                <thead>
+                  <tr>
+                    <th>Tarea</th>
+                    <th>Descripción</th>
+                    <th>Estado</th>
+                    <th>Prioridad</th>
+                    <th>Área</th>
+                    <th>Fecha Límite</th>
+                    <th>Progreso</th>
+                    <th>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for tg in tareas_generales %}
+                    <tr>
+                      <td data-label="Tarea">
+                        <a href="{{ url_for('ver_tarea_general', tarea_general_id=tg.id) }}">{{ tg.title }}</a>
+                      </td>
+                      <td data-label="Descripción">{{ tg.description or 'Sin descripción' }}</td>
+                      <td data-label="Estado">
+                        <span class="status-badge status-{{ tg.status|lower|replace(' ', '-') }}">{{ tg.status }}</span>
+                      </td>
+                      <td data-label="Prioridad">{{ tg.prioridad }}</td>
+                      <td data-label="Área">{{ tg.area.name if tg.area else 'N/A' }}</td>
+                      <td data-label="Fecha Límite">
+                        {{ tg.fecha_limite.strftime('%Y-%m-%d') if tg.fecha_limite else 'N/A' }}
+                      </td>
+                      <td data-label="Progreso">
+                        {% set pct = tg.porcentaje_avance|default(0)|round(0) %}
+                        <div class="progress-bar-container">
+                          <div class="progress-bar" style="width: {{ pct }}%;">
+                            {% if pct > 15 %}
+                              <span class="progress-text-inner">{{ pct }}%</span>
+                            {% endif %}
+                          </div>
+                          {% if pct <= 15 %}
+                            <span class="progress-text">{{ pct }}%</span>
+                          {% endif %}
+                        </div>
+                      </td>
+                      <td data-label="Acciones">
+                        <a href="{{ url_for('editar_tarea_general', tarea_general_id=tg.id) }}" class="button btn-sm btn-info">Editar</a>
+                        <form action="{{ url_for('eliminar_tarea_general', tarea_general_id=tg.id) }}" method="POST" style="display:inline;" onsubmit="return confirm('¿Eliminar esta tarea general?');">
+                          <button type="submit" class="button btn-sm btn-danger">Eliminar</button>
+                        </form>
+                      </td>
+                    </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          {% else %}
+            <p class="empty-state-message">No hay tareas generales para este proyecto aún.</p>
+          {% endif %}
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Columna Derecha -->
+    <div class="grid-column-right">
+      <div class="card neon-border">
+        <div class="card-header"><h3>Resumen Adicional</h3></div>
+        <div class="card-body">
+          <p>Aquí podría ir un gráfico o estadísticas adicionales del proyecto.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Botones de acción final -->
+  <div class="back-to-dashboard-container button-group mt-4">
+    {% if current_user.role in ['supervisor','admin'] %}
+      <a href="{{ url_for('nueva_tarea_general', project_id=project.id) }}" class="button btn-success">+ Nueva Tarea General</a>
+    {% endif %}
+    <a href="{{ url_for('dashboard') }}" class="button btn-secondary">← Volver al Dashboard</a>
+  </div>
+{% endblock %}
+
+{% block scripts %}
+  {{ super() }}
+{% endblock %}
